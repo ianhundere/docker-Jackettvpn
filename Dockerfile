@@ -1,5 +1,6 @@
-# Jackett, OpenVPN and WireGuard, JackettVPN
-FROM debian:bullseye-slim
+# Jackett and OpenVPN, JackettVPN
+
+FROM raspbian/stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV XDG_DATA_HOME="/config" \
@@ -12,51 +13,45 @@ RUN usermod -u 99 nobody
 # Make directories
 RUN mkdir -p /blackhole /config/Jackett /etc/jackett
 
-# Download Jackett
-RUN apt update \
-    && apt upgrade -y \
-    && apt install -y  --no-install-recommends \
-    ca-certificates \
+# Update and upgrade
+RUN apt update && apt -y upgrade
+
+#  install required packages
+RUN apt -y install \
+    apt-transport-https \
+    wget \
     curl \
-    && JACKETT_VERSION=$(curl -sX GET "https://api.github.com/repos/Jackett/Jackett/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
-    && curl -o /opt/Jackett.Binaries.LinuxAMDx64.tar.gz -L "https://github.com/Jackett/Jackett/releases/download/${JACKETT_VERSION}/Jackett.Binaries.LinuxAMDx64.tar.gz" \
-    && tar -xzf /opt/Jackett.Binaries.LinuxAMDx64.tar.gz -C /opt \
-    && rm -f /opt/Jackett.Binaries.LinuxAMDx64.tar.gz \ 
-    && apt purge -y \
-    ca-certificates \
+    gnupg \
+    sed \
+    openvpn \
     curl \
+    moreutils \
+    net-tools \
+    dos2unix \
+    kmod \
+    iptables \
+    ipcalc\
+    grep \
+    libunwind8 \
+    icu-devtools \
+    #libcurl4 \
+    liblttng-ust0 \
+    #libssl1.0.0 \
+    libkrb5-3 \
+    zlib1g \
+    tzdata \
     && apt-get clean \
-    && apt autoremove -y \
     && rm -rf \
     /var/lib/apt/lists/* \
     /tmp/* \
     /var/tmp/*
 
-# Install WireGuard and other dependencies some of the scripts in the container rely on.
-RUN echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable-wireguard.list \
-    && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' > /etc/apt/preferences.d/limit-unstable \
-    && apt update \
-    && apt install -y --no-install-recommends \
-    ca-certificates \
-    dos2unix \
-    inetutils-ping \
-    ipcalc \
-    iptables \
-    jq \
-    kmod \
-    libicu63 \
-    moreutils \
-    net-tools \
-    openresolv \
-    openvpn \
-    procps \
-    wireguard-tools \
-    && apt-get clean \
-    && apt autoremove -y \
-    && rm -rf \
-    /var/lib/apt/lists/* \
-    /tmp/* \
-    /var/tmp/*
+
+# Install Jackett
+RUN jackett_latest=$(curl --silent "https://api.github.com/repos/Jackett/Jackett/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/') \
+    && curl -o /opt/Jackett.Binaries.LinuxARM32.tar.gz -L https://github.com/Jackett/Jackett/releases/download/$jackett_latest/Jackett.Binaries.LinuxARM32.tar.gz \
+    && tar -xvzf /opt/Jackett.Binaries.LinuxARM32.tar.gz \
+    && rm /opt/Jackett.Binaries.LinuxARM32.tar.gz
 
 VOLUME /blackhole /config
 
