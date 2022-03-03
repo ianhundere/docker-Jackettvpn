@@ -4,7 +4,7 @@ FROM raspbian/stretch
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV XDG_DATA_HOME="/config" \
-XDG_CONFIG_HOME="/config"
+    XDG_CONFIG_HOME="/config"
 
 WORKDIR /opt
 
