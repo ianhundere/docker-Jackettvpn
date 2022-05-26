@@ -1,3 +1,21 @@
+### Note
+This was forked from DyonR's [docker-Jackettvpn](https://github.com/DyonR/docker-Jackettvpn) repo and includes the following changes from gjeanmart's [docker-Jackettvpn](https://github.com/gjeanmart/docker-Jackettvpn) repo:
+
+`openvpn/start.sh` now contains the following to avoid the `OpenVPN - ERROR: Cannot open TUN/TAP dev /dev/net/tun: No such file or directory (errno=2)` error:
+
+```
+	# If create_tun_device is set, create /dev/net/tun
+	if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]] && [[ ! -f /dev/net/tun ]]; then
+	  mkdir -p /dev/net
+	  mknod /dev/net/tun c 10 200
+	  chmod 0666 /dev/net/tun
+	fi
+```
+
+`jackett/iptables.sh` is based on an older [commit](https://github.com/DyonR/docker-Jackettvpn/blame/215cf39a866b0f68af3e2798397e794ad729b0fe/jackett/iptables.sh), but avoids the `write UDP: Operation not permitted (code=1)` error.
+
+...and finally, instead of the AMDx64 build of Jackett, this uses ARM64.
+
 # [Jackett](https://github.com/Jackett/Jackett), WireGuard and OpenVPN
 [![Docker Pulls](https://img.shields.io/docker/pulls/dyonr/jackettvpn)](https://hub.docker.com/r/dyonr/jackettvpn)
 [![Docker Image Size (tag)](https://img.shields.io/docker/image-size/dyonr/jackettvpn/latest)](https://hub.docker.com/r/dyonr/jackettvpn)
