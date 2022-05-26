@@ -91,6 +91,13 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		fi
 	fi
 
+	# If create_tun_device is set, create /dev/net/tun
+	if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]] && [[ ! -f /dev/net/tun ]]; then
+	  mkdir -p /dev/net
+	  mknod /dev/net/tun c 10 200
+	  chmod 0666 /dev/net/tun
+	fi
+
 	# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		if [[ ! -z "${VPN_USERNAME}" ]] && [[ ! -z "${VPN_PASSWORD}" ]]; then
