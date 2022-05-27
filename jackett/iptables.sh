@@ -184,4 +184,6 @@ echo "--------------------"
 iptables -S
 echo "--------------------"
 
+sleep 30
+
 exec /bin/bash /etc/jackett/start.sh
