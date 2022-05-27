@@ -179,11 +179,11 @@ iptables -A OUTPUT -p icmp --icmp-type echo-request -j ACCEPT
 # accept output from local loopback adapter
 iptables -A OUTPUT -o lo -j ACCEPT
 
+sleep 120
+
 echo "[INFO] iptables defined as follows..." | ts '%Y-%m-%d %H:%M:%.S'
 echo "--------------------"
 iptables -S
 echo "--------------------"
-
-sleep 30
 
 exec /bin/bash /etc/jackett/start.sh
