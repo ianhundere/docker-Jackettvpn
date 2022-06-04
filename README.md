@@ -12,7 +12,7 @@ This was forked from DyonR's [docker-Jackettvpn](https://github.com/DyonR/docker
 	fi
 ```
 
-`jackett/iptables.sh` is based on an older [commit](https://github.com/DyonR/docker-Jackettvpn/blame/215cf39a866b0f68af3e2798397e794ad729b0fe/jackett/iptables.sh), but avoids the `write UDP: Operation not permitted (code=1)` error.
+`jackett/iptables.sh` / `Dockerfile` are based on an older commits, [iptables.sh](https://github.com/DyonR/docker-Jackettvpn/blame/215cf39a866b0f68af3e2798397e794ad729b0fe/jackett/iptables.sh) and [Dockerfile](https://github.com/gjeanmart/docker-Jackettvpn/commit/cd71c0a4d80a7c90a3a3143434859516953e5cfa), but avoids the `write UDP: Operation not permitted (code=1)` error. Once I bumped this to using ARM64, I opted to use the image that DyonR is currently using, `debian:bullseye-slim`, as it's actively maintained and half as large.
 
 ...and finally, instead of the AMDx64 build of Jackett, this uses ARM64.
 
