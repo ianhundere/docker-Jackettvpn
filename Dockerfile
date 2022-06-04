@@ -1,4 +1,4 @@
-# Jackett, OpenVPN and WireGuard, JackettVPN
+# Jackett, OpenVPN /JackettVPN
 FROM debian:bullseye-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -32,7 +32,7 @@ RUN apt update \
     /tmp/* \
     /var/tmp/*
 
-# Install WireGuard and other dependencies some of the scripts in the container rely on.
+# Install OpenVPN and other dependencies some of the scripts in the container rely on.
 RUN apt update \
     && apt install -y --no-install-recommends \
     apt-transport-https \

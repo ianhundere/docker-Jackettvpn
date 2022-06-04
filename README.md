@@ -16,11 +16,11 @@ This was forked from DyonR's [docker-Jackettvpn](https://github.com/DyonR/docker
 
 ...and finally, instead of the AMDx64 build of Jackett, this uses ARM64.
 
-# [Jackett](https://github.com/Jackett/Jackett), WireGuard and OpenVPN
+# [Jackett](https://github.com/Jackett/Jackett) and OpenVPN
 [![Docker Pulls](https://img.shields.io/docker/pulls/dyonr/jackettvpn)](https://hub.docker.com/r/dyonr/jackettvpn)
 [![Docker Image Size (tag)](https://img.shields.io/docker/image-size/dyonr/jackettvpn/latest)](https://hub.docker.com/r/dyonr/jackettvpn)
 
-Docker container which runs the latest headless [Jackett](https://github.com/Jackett/Jackett) Server while connecting to WireGuard or OpenVPN with iptables killswitch to prevent IP leakage when the tunnel goes down.
+Docker container which runs the latest headless [Jackett](https://github.com/Jackett/Jackett) Server while connecting to OpenVPN with iptables killswitch to prevent IP leakage when the tunnel goes down.
 
 [preview]: https://raw.githubusercontent.com/DyonR/docker-templates/master/Screenshots/jackettvpn/jackettvpn-mainpage.png "Jackett Preview"
 ![alt text][preview]
@@ -28,7 +28,7 @@ Docker container which runs the latest headless [Jackett](https://github.com/Jac
 ## Docker Features
 * Base: Debian bullseye-slim
 * Latest [Jackett](https://github.com/Jackett/Jackett)
-* Selectively enable or disable WireGuard or OpenVPN support
+* Selectively enable or disable OpenVPN support
 * IP tables kill switch to prevent IP leaking when VPN connection fails
 * Configurable UID and GID for config files and /blackhole for Jackett
 * Created with [Unraid](https://unraid.net/) in mind
@@ -42,7 +42,7 @@ $ docker run --privileged  -d \
               -v /your/config/path/:/config \
               -v /your/downloads/path/:/blackhole \
               -e "VPN_ENABLED=yes" \
-              -e "VPN_TYPE=wireguard" \
+              -e "VPN_TYPE=openvpn" \
               -e "LAN_NETWORK=192.168.0.0/24" \
               -p 9117:9117 \
               --restart unless-stopped \
@@ -54,7 +54,7 @@ $ docker run --privileged  -d \
 | Variable | Required | Function | Example | Default |
 |----------|----------|----------|----------|----------|
 |`VPN_ENABLED`| Yes | Enable VPN? (yes/no)|`VPN_ENABLED=yes`|`yes`|
-|`VPN_TYPE`| Yes | WireGuard or OpenVPN? (wireguard/openvpn)|`VPN_TYPE=wireguard`|`openvpn`|
+|`VPN_TYPE`| Yes | OpenVPN (openvpn)|`VPN_TYPE=openvpn`|
 |`VPN_USERNAME`| No | If username and password provided, configures ovpn file automatically |`VPN_USERNAME=ad8f64c02a2de`||
 |`VPN_PASSWORD`| No | If username and password provided, configures ovpn file automatically |`VPN_PASSWORD=ac98df79ed7fb`||
 |`WEBUI_PASSWORD`| Yes | The password used to protect/access Jackett's web interface |`WEBUI_PASSWORD=RJayoLnKPjeyHbo-_ziH`||
@@ -90,9 +90,6 @@ API Keys are randomly generated the first time that Jackett starts up. There is 
 |----------|----------|
 |`API Key`| Randomly generated |
 |`WebUI Password`| No password |
-
-# How to use WireGuard 
-The container will fail to boot if `VPN_ENABLED` is set and there is no valid .conf file present in the /config/wireguard directory. Drop a .conf file from your VPN provider into /config/wireguard and start the container again. The file must have the name `wg0.conf`, or it will fail to start.
 
 # How to use OpenVPN
 The container will fail to boot if `VPN_ENABLED` is set and there is no valid .ovpn file present in the /config/openvpn directory. Drop a .ovpn file from your VPN provider into /config/openvpn (if necessary with additional files like certificates) and start the container again. You may need to edit the ovpn configuration file to load your VPN credentials from a file by setting `auth-user-pass`.

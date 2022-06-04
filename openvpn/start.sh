@@ -43,13 +43,13 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		echo "[INFO] VPN_TYPE defined as '${VPN_TYPE}'" | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
-	if [[ "${VPN_TYPE}" != "openvpn" && "${VPN_TYPE}" != "wireguard" ]]; then
-		echo "[WARNING] VPN_TYPE not set, as 'wireguard' or 'openvpn', defaulting to OpenVPN." | ts '%Y-%m-%d %H:%M:%.S'
+	if [[ "${VPN_TYPE}" != "openvpn" ]]; then
+		echo "[WARNING] VPN_TYPE not set as 'openvpn', defaulting to OpenVPN." | ts '%Y-%m-%d %H:%M:%.S'
 		export VPN_TYPE="openvpn"
 	fi
-	# Create the directory to store OpenVPN or WireGuard config files
+	# Create the directory to store OpenVPN
 	mkdir -p /config/${VPN_TYPE}
-	# Set permmissions and owner for files in /config/openvpn or /config/wireguard directory
+	# Set permmissions and owner for files in /config/openvpn
 	set +e
 	chown -R "${PUID}":"${PGID}" "/config/${VPN_TYPE}" &> /dev/null
 	exit_code_chown=$?
@@ -63,16 +63,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	# Wildcard search for openvpn config files (match on first result)
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		export VPN_CONFIG=$(find /config/openvpn -maxdepth 1 -name "*.ovpn" -print -quit)
-	else
-		export VPN_CONFIG=$(find /config/wireguard -maxdepth 1 -name "*.conf" -print -quit)
 	fi
 
-	# If ovpn file not found in /config/openvpn or /config/wireguard then exit
+	# If ovpn file not found in /config/openvpn then exit
 	if [[ -z "${VPN_CONFIG}" ]]; then
 		if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 			echo "[ERROR] No OpenVPN config file found in /config/openvpn/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.ovpn'" | ts '%Y-%m-%d %H:%M:%.S'
-		else
-			echo "[ERROR] No WireGuard config file found in /config/wireguard/. Please download one from your VPN provider and restart this container. Make sure the file extension is '.conf'" | ts '%Y-%m-%d %H:%M:%.S'
 		fi
 		# Sleep so it wont 'spam restart'
 		sleep 10
@@ -81,14 +77,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		echo "[INFO] OpenVPN config file is found at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
-	else
-		echo "[INFO] WireGuard config file is found at ${VPN_CONFIG}" | ts '%Y-%m-%d %H:%M:%.S'
-		if [[ "${VPN_CONFIG}" != "/config/wireguard/wg0.conf" ]]; then
-			echo "[ERROR] WireGuard config filename is not 'wg0.conf'" | ts '%Y-%m-%d %H:%M:%.S'
-			echo "[ERROR] Rename ${VPN_CONFIG} to 'wg0.conf'" | ts '%Y-%m-%d %H:%M:%.S'
-			sleep 10
-			exit 1
-		fi
 	fi
 
 	# If create_tun_device is set, create /dev/net/tun
@@ -189,7 +177,7 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		fi
 	else
 		export VPN_PROTOCOL="udp"
-		echo "[INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}', since WireGuard is always ${VPN_PROTOCOL}." | ts '%Y-%m-%d %H:%M:%.S'
+		echo "[INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}'." | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
 
@@ -204,9 +192,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			sleep 10
 			exit 1
 		fi
-	else
-		export VPN_DEVICE_TYPE="wg0"
-		echo "[INFO] VPN_DEVICE_TYPE set as '${VPN_DEVICE_TYPE}', since WireGuard will always be wg0." | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
 	# get values from env vars as defined by user
@@ -270,15 +255,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		echo "[INFO] Starting OpenVPN..." | ts '%Y-%m-%d %H:%M:%.S'
 		cd /config/openvpn
 		exec openvpn --pull-filter ignore route-ipv6 --pull-filter ignore ifconfig-ipv6 --config "${VPN_CONFIG}" &
-		#exec /bin/bash /etc/openvpn/openvpn.init start &
-	else
-		echo "[INFO] Starting WireGuard..." | ts '%Y-%m-%d %H:%M:%.S'
-		cd /config/wireguard
-		if ip link | grep -q `basename -s .conf $VPN_CONFIG`; then
-			wg-quick down $VPN_CONFIG || echo "WireGuard is down already" | ts '%Y-%m-%d %H:%M:%.S' # Run wg-quick down as an extra safeguard in case WireGuard is still up for some reason
-			sleep 0.5 # Just to give WireGuard a bit to go down
-		fi
-		wg-quick up $VPN_CONFIG
 		#exec /bin/bash /etc/openvpn/openvpn.init start &
 	fi
 	exec /bin/bash /etc/jackett/iptables.sh
