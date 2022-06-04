@@ -37,11 +37,19 @@ RUN echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.li
     && printf 'Package: *\nPin: release a=unstable\nPin-Priority: 150\n' > /etc/apt/preferences.d/limit-unstable \
     && apt update \
     && apt install -y --no-install-recommends \
-    ca-certificates \
+    apt-transport-https \
+    wget \
     dos2unix \
     inetutils-ping \
-    ipcalc \
     iptables \
+    ipcalc\
+    grep \
+    libunwind8 \
+    icu-devtools \
+    liblttng-ust0 \
+    libkrb5-3 \
+    zlib1g \
+    tzdata \
     jq \
     kmod \
     libicu67 \
