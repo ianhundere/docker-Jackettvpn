@@ -23,18 +23,6 @@ if [[ "${DEBUG}" == "true" ]]; then
 	echo "[DEBUG] Docker IP defined as ${docker_ip}" | ts '%Y-%m-%d %H:%M:%.S'
 fi
 
-#docker_default_range="172.17.0.0/16"
-
-#for IP in ${docker_ip}; do
-#	grepcidr "$docker_default_range" <(echo "$IP") >/dev/null
-#	grepcidr_status=$?
-#	if [ "${grepcidr_status}" -eq 1 ]; then
-#		echo "[ERROR] It seems like the IP the container is using outside the default Docker DHCP range" | ts '%Y-%m-%d %H:%M:%.S'
-#		echo "[ERROR] Use bridge mode to run this container. Using a custom IP is not supported." | ts '%Y-%m-%d %H:%M:%.S'
-#		echo "[ERROR] IP of the container: ${docker_ip}" | ts '%Y-%m-%d %H:%M:%.S'
-#	fi
-#done
-
 # identify netmask for docker bridge interface
 docker_mask=$(ifconfig "${docker_interface}" | grep -o "netmask [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
 if [[ "${DEBUG}" == "true" ]]; then

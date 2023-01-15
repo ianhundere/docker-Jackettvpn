@@ -13,14 +13,6 @@ if [[ ! -z "${check_network}" ]]; then
 	exit 1
 fi
 
-# If create_tun_device is set, create /dev/net/tun
-if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]]; then
-	echo "Creating TUN device /dev/net/tun"
-	mkdir -p /dev/net
-	mknod /dev/net/tun c 10 200
-	chmod 0666 /dev/net/tun
-fi
-
 export VPN_ENABLED=$(echo "${VPN_ENABLED,,}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${VPN_ENABLED}" ]]; then
 	echo "[INFO] VPN_ENABLED defined as '${VPN_ENABLED}'" | ts '%Y-%m-%d %H:%M:%.S'
@@ -29,18 +21,18 @@ else
 	export VPN_ENABLED="yes"
 fi
 
- export LEGACY_IPTABLES=$(echo "${LEGACY_IPTABLES,,}")
- iptables_version=$(iptables -V)
- echo "[INFO] The container is currently running ${iptables_version}."  | ts '%Y-%m-%d %H:%M:%.S'
- echo "[INFO] LEGACY_IPTABLES is set to '${LEGACY_IPTABLES}'" | ts '%Y-%m-%d %H:%M:%.S'
- if [[ $LEGACY_IPTABLES == "1" || $LEGACY_IPTABLES == "true" || $LEGACY_IPTABLES == "yes" ]]; then
+export LEGACY_IPTABLES=$(echo "${LEGACY_IPTABLES,,}")
+iptables_version=$(iptables -V)
+echo "[INFO] The container is currently running ${iptables_version}." | ts '%Y-%m-%d %H:%M:%.S'
+echo "[INFO] LEGACY_IPTABLES is set to '${LEGACY_IPTABLES}'" | ts '%Y-%m-%d %H:%M:%.S'
+if [[ $LEGACY_IPTABLES == "1" || $LEGACY_IPTABLES == "true" || $LEGACY_IPTABLES == "yes" ]]; then
 	echo "[INFO] Setting iptables to iptables (legacy)" | ts '%Y-%m-%d %H:%M:%.S'
 	update-alternatives --set iptables /usr/sbin/iptables-legacy
 	iptables_version=$(iptables -V)
 	echo "[INFO] The container is now running ${iptables_version}." | ts '%Y-%m-%d %H:%M:%.S'
- else
+else
 	echo "[INFO] Not making any changes to iptables version" | ts '%Y-%m-%d %H:%M:%.S'
- fi
+fi
 
 if [[ $VPN_ENABLED == "yes" ]]; then
 	# Check if VPN_TYPE is set.
@@ -59,12 +51,12 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 	mkdir -p /config/${VPN_TYPE}
 	# Set permmissions and owner for files in /config/openvpn
 	set +e
-	chown -R "${PUID}":"${PGID}" "/config/${VPN_TYPE}" &> /dev/null
+	chown -R "${PUID}":"${PGID}" "/config/${VPN_TYPE}" &>/dev/null
 	exit_code_chown=$?
-	chmod -R 775 "/config/${VPN_TYPE}" &> /dev/null
+	chmod -R 775 "/config/${VPN_TYPE}" &>/dev/null
 	exit_code_chmod=$?
 	set -e
-	if (( ${exit_code_chown} != 0 || ${exit_code_chmod} != 0 )); then
+	if ((${exit_code_chown} != 0 || ${exit_code_chmod} != 0)); then
 		echo "[WARNING] Unable to chown/chmod /config/${VPN_TYPE}/, assuming SMB mountpoint" | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
@@ -89,9 +81,9 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 
 	# If create_tun_device is set, create /dev/net/tun
 	if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]] && [[ ! -f /dev/net/tun ]]; then
-	  mkdir -p /dev/net
-	  mknod /dev/net/tun c 10 200
-	  chmod 0666 /dev/net/tun
+		mkdir -p /dev/net
+		mknod /dev/net/tun c 10 200
+		chmod 0666 /dev/net/tun
 	fi
 
 	# Read username and password env vars and put them in credentials.conf, then add ovpn config for credentials file
@@ -101,8 +93,8 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 				touch /config/openvpn/credentials.conf
 			fi
 
-			echo "${VPN_USERNAME}" > /config/openvpn/credentials.conf
-			echo "${VPN_PASSWORD}" >> /config/openvpn/credentials.conf
+			echo "${VPN_USERNAME}" >/config/openvpn/credentials.conf
+			echo "${VPN_PASSWORD}" >>/config/openvpn/credentials.conf
 
 			# Replace line with one that points to credentials.conf
 			auth_cred_exist=$(cat "${VPN_CONFIG}" | grep -m 1 'auth-user-pass')
@@ -115,10 +107,10 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 			fi
 		fi
 	fi
-	
+
 	# convert CRLF (windows) to LF (unix) for ovpn
-	dos2unix "${VPN_CONFIG}" 1> /dev/null
-	
+	dos2unix "${VPN_CONFIG}" 1>/dev/null
+
 	# parse values from the ovpn or conf file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		export vpn_remote_line=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^remote\s)[^\n\r]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
@@ -188,7 +180,6 @@ if [[ $VPN_ENABLED == "yes" ]]; then
 		echo "[INFO] VPN_PROTOCOL set as '${VPN_PROTOCOL}'." | ts '%Y-%m-%d %H:%M:%.S'
 	fi
 
-
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then
 		VPN_DEVICE_TYPE=$(cat "${VPN_CONFIG}" | grep -P -o -m 1 '(?<=^dev\s)[^\r\n\d]+' | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 		if [[ ! -z "${VPN_DEVICE_TYPE}" ]]; then
@@ -235,9 +226,8 @@ elif [[ $VPN_ENABLED == "no" ]]; then
 	echo "[WARNING] !!IMPORTANT!! You have set the VPN to disabled, your connection will NOT be secure!" | ts '%Y-%m-%d %H:%M:%.S'
 fi
 
-
 # split comma seperated string into list from NAME_SERVERS env variable
-IFS=',' read -ra name_server_list <<< "${NAME_SERVERS}"
+IFS=',' read -ra name_server_list <<<"${NAME_SERVERS}"
 
 # process name servers in the list
 for name_server_item in "${name_server_list[@]}"; do
@@ -245,7 +235,7 @@ for name_server_item in "${name_server_list[@]}"; do
 	name_server_item=$(echo "${name_server_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
 	echo "[INFO] Adding ${name_server_item} to resolv.conf" | ts '%Y-%m-%d %H:%M:%.S'
-	echo "nameserver ${name_server_item}" >> /etc/resolv.conf
+	echo "nameserver ${name_server_item}" >>/etc/resolv.conf
 done
 
 if [[ -z "${PUID}" ]]; then
