@@ -2,7 +2,7 @@
 # Forked from binhex's OpenVPN dockers
 # Wait until tunnel is up
 
-while : ; do
+while :; do
 	tunnelstat=$(netstat -ie | grep -E "tun|tap|wg")
 	if [[ ! -z "${tunnelstat}" ]]; then
 		break
@@ -23,6 +23,18 @@ if [[ "${DEBUG}" == "true" ]]; then
 	echo "[DEBUG] Docker IP defined as ${docker_ip}" | ts '%Y-%m-%d %H:%M:%.S'
 fi
 
+#docker_default_range="172.17.0.0/16"
+
+#for IP in ${docker_ip}; do
+#	grepcidr "$docker_default_range" <(echo "$IP") >/dev/null
+#	grepcidr_status=$?
+#	if [ "${grepcidr_status}" -eq 1 ]; then
+#		echo "[ERROR] It seems like the IP the container is using outside the default Docker DHCP range" | ts '%Y-%m-%d %H:%M:%.S'
+#		echo "[ERROR] Use bridge mode to run this container. Using a custom IP is not supported." | ts '%Y-%m-%d %H:%M:%.S'
+#		echo "[ERROR] IP of the container: ${docker_ip}" | ts '%Y-%m-%d %H:%M:%.S'
+#	fi
+#done
+
 # identify netmask for docker bridge interface
 docker_mask=$(ifconfig "${docker_interface}" | grep -o "netmask [0-9]*\.[0-9]*\.[0-9]*\.[0-9]*" | grep -o "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
 if [[ "${DEBUG}" == "true" ]]; then
@@ -40,14 +52,14 @@ echo "[INFO] Docker network defined as ${docker_network_cidr}" | ts '%Y-%m-%d %H
 DEFAULT_GATEWAY=$(ip -4 route list 0/0 | cut -d ' ' -f 3)
 
 # split comma separated string into list from LAN_NETWORK env variable
-IFS=',' read -ra lan_network_list <<< "${LAN_NETWORK}"
+IFS=',' read -ra lan_network_list <<<"${LAN_NETWORK}"
 
 # process lan networks in the list
 for lan_network_item in "${lan_network_list[@]}"; do
 	# strip whitespace from start and end of lan_network_item
 	lan_network_item=$(echo "${lan_network_item}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 
-	echo "[INFO] Adding ${lan_network_item} as route via docker ${docker_interface}"  | ts '%Y-%m-%d %H:%M:%.S'
+	echo "[INFO] Adding ${lan_network_item} as route via docker ${docker_interface}" | ts '%Y-%m-%d %H:%M:%.S'
 	ip route add "${lan_network_item}" via "${DEFAULT_GATEWAY}" dev "${docker_interface}"
 done
 
@@ -72,7 +84,7 @@ if [[ $iptable_mangle_exit_code == 0 ]]; then
 	echo "[INFO] iptable_mangle support detected, adding fwmark for tables" | ts '%Y-%m-%d %H:%M:%.S'
 
 	# setup route for jackett webui using set-mark to route traffic for port 9117 to "${docker_interface}"
-	echo "9117    webui" >> /etc/iproute2/rt_tables
+	echo "9117    webui" >>/etc/iproute2/rt_tables
 	ip rule add fwmark 1 table webui
 	ip route add default via ${DEFAULT_GATEWAY} table webui
 fi
@@ -102,7 +114,7 @@ iptables -A INPUT -i "${docker_interface}" -p tcp --sport 9117 -j ACCEPT
 # additional port list for scripts or container linking
 if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 	# split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
+	IFS=',' read -ra additional_port_list <<<"${ADDITIONAL_PORTS}"
 
 	# process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
@@ -156,7 +168,7 @@ iptables -A OUTPUT -o "${docker_interface}" -p tcp --sport 9117 -j ACCEPT
 # additional port list for scripts or container linking
 if [[ ! -z "${ADDITIONAL_PORTS}" ]]; then
 	# split comma separated string into list from ADDITIONAL_PORTS env variable
-	IFS=',' read -ra additional_port_list <<< "${ADDITIONAL_PORTS}"
+	IFS=',' read -ra additional_port_list <<<"${ADDITIONAL_PORTS}"
 
 	# process additional ports in the list
 	for additional_port_item in "${additional_port_list[@]}"; do
