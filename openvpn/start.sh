@@ -13,6 +13,14 @@ if [[ ! -z "${check_network}" ]]; then
 	exit 1
 fi
 
+# If create_tun_device is set, create /dev/net/tun
+if [[ "${CREATE_TUN_DEVICE,,}" == "true" ]]; then
+	echo "Creating TUN device /dev/net/tun"
+	mkdir -p /dev/net
+	mknod /dev/net/tun c 10 200
+	chmod 0666 /dev/net/tun
+fi
+
 export VPN_ENABLED=$(echo "${VPN_ENABLED,,}" | sed -e 's~^[ \t]*~~;s~[ \t]*$~~')
 if [[ ! -z "${VPN_ENABLED}" ]]; then
 	echo "[INFO] VPN_ENABLED defined as '${VPN_ENABLED}'" | ts '%Y-%m-%d %H:%M:%.S'
