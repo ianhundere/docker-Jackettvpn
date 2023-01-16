@@ -35,6 +35,7 @@ RUN apt update \
 # Install OpenVPN and other dependencies some of the scripts in the container rely on.
 RUN apt update \
     && apt install -y --no-install-recommends \
+    ca-certificates \
     apt-transport-https \
     wget \
     dos2unix \
